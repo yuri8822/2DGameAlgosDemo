@@ -1,17 +1,31 @@
 #include <SDL.h>
 #include <iostream>
 #include <vector>
+#include <thread>
+#include <ctime>
+
+using namespace std;
 
 struct Entity
 {
 	SDL_Rect rect;
+	int Health;
+	int DamageOut;
+	int DamageIn;
+	bool Slowed;
+
 
 	Entity()
 	{
-		rect.w = 200;
-		rect.h = 200;
+		rect.w = 50;
+		rect.h = 50;
 		rect.x = 200;
 		rect.y = 200;
+
+		Health = 100;
+		DamageOut = 20;
+		DamageIn = 20;
+		Slowed = false;
 	}
 
 	virtual void Move(int x, int y) = 0;
@@ -23,8 +37,8 @@ struct Player : public Entity
 {
 	Player()
 	{
-		rect.x = 200;
-		rect.y = 200;
+		rect.x = rand() % 600;
+		rect.y = rand() % 200;
 	}
 	void Move(int x, int y)
 	{
@@ -47,8 +61,8 @@ struct NPC : public Entity
 {
 	NPC()
 	{
-		rect.x = 600;
-		rect.y = 200;
+		rect.x = rand()%600;
+		rect.y = rand()%200;
 	}
 	void Move(int x, int y)
 	{
@@ -65,18 +79,32 @@ struct NPC : public Entity
 	}
 };
 
+struct EntityManager
+{
+	vector<Entity*> NPCs;
+
+};
+
 int main(int argc, char *argv[])
 {
 	// Initializers:
 	SDL_Init(SDL_INIT_VIDEO);
+	srand(time(NULL));
+	EntityManager EntityManager;
 	Entity *player = new Player;
-	Entity *npc = new NPC;
+	int npcLimit = rand() % 5 + 1;
+	for (int i = 0; i < npcLimit; i++)
+	{
+		Entity *npc = new NPC;
+		EntityManager.NPCs.push_back(npc);
+	}
+
 
 	//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!//
 	// Create a window																									   //
-	SDL_Window *window = SDL_CreateWindow("2D Game Demo", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600, 0); //
+	SDL_Window *window = SDL_CreateWindow("2D Game Demo", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600, 0);    //
 	// Create a renderer																								   //
-	SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC); //
+	SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);		   //
 	//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!//
 
 	//////
@@ -123,7 +151,10 @@ int main(int argc, char *argv[])
 		player->Draw(renderer);
 
 		// Draw The NPC:
-		npc->Draw(renderer);
+		for (int i = 0; i < npcLimit; i++)
+		{
+			EntityManager.NPCs[i]->Draw(renderer);
+		}
 
 		// Show the frame
 		SDL_RenderPresent(renderer);
