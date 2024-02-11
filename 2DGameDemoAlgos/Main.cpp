@@ -6,6 +6,16 @@
 
 using namespace std;
 
+enum Color { Ready, Fired, Hit};
+
+
+struct Bullet
+{
+	int Damage = 10;
+	int Speed;
+	int State = Ready;
+};
+
 struct Entity
 {
 	SDL_Rect rect;
@@ -37,8 +47,8 @@ struct Player : public Entity
 {
 	Player()
 	{
-		rect.x = rand() % 600;
-		rect.y = rand() % 200;
+		rect.x = rand() % 800;
+		rect.y = rand() % 600;
 	}
 	void Move(int x, int y)
 	{
@@ -61,8 +71,8 @@ struct NPC : public Entity
 {
 	NPC()
 	{
-		rect.x = rand()%600;
-		rect.y = rand()%200;
+		rect.x = rand() % 800;
+		rect.y = rand() % 600;
 	}
 	void Move(int x, int y)
 	{
