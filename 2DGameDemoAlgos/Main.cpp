@@ -11,9 +11,48 @@ enum Color { Ready, Fired, Hit};
 
 struct Bullet
 {
-	int Damage = 10;
+	SDL_Rect rect;
+	int Damage;
 	int Speed;
-	int State = Ready;
+	int State;
+	bool isNPCs;
+
+	Bullet()
+	{
+
+	}
+	Bullet(int x, int y)
+	{
+		rect.w = 5;
+		rect.h = 5;
+		rect.x = x;
+		rect.y = y;
+
+		Damage = 10;
+		Speed = 5;
+		State = Ready;
+	}
+	void Move(int x, int y)
+	{
+		rect.x += x;
+		rect.y += y;
+	}
+	void Draw(SDL_Renderer* renderer)
+	{
+		SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+		SDL_RenderFillRect(renderer, &rect);
+	}
+	void Shoot(int direction)
+	{
+		switch (direction)
+		{
+		case 0:
+			
+			break;
+		default:
+			break;
+		}
+	}
 };
 
 struct Entity
@@ -23,6 +62,7 @@ struct Entity
 	int DamageOut;
 	int DamageIn;
 	bool Slowed;
+	vector<Bullet> bullets;
 
 
 	Entity()
@@ -36,11 +76,19 @@ struct Entity
 		DamageOut = 20;
 		DamageIn = 20;
 		Slowed = false;
+
+
+		for (int i = 0; i < 6; i++)
+		{
+			Bullet newBullet(rect.x, rect.y);
+			bullets.push_back(newBullet);
+		}
 	}
 
-	virtual void Move(int x, int y) = 0;
+	virtual void Move(SDL_Renderer* renderer, int x, int y) = 0;
 	virtual void Draw(SDL_Renderer *renderer, int R, int G, int B) = 0;
 	virtual void Draw(SDL_Renderer *renderer) = 0;
+	virtual void Shoot(int direction) = 0;
 };
 
 struct Player : public Entity
@@ -50,10 +98,21 @@ struct Player : public Entity
 		rect.x = rand() % 800;
 		rect.y = rand() % 600;
 	}
-	void Move(int x, int y)
+	void Move(SDL_Renderer* renderer, int x, int y)
 	{
+		// Move the Player:
 		rect.x += x;
 		rect.y += y;
+
+		// Draw the Player:
+		Draw(renderer);
+
+		// Move bullet to players new location:
+		for (int i = 0; i < 6; i++)
+		{
+			bullets[i].Move(rect.x, rect.y);
+			bullets[i].Draw(renderer);
+		}
 	}
 	void Draw(SDL_Renderer *renderer, int R, int G, int B)
 	{
@@ -65,6 +124,14 @@ struct Player : public Entity
 		SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
 		SDL_RenderFillRect(renderer, &rect);
 	}
+	void Shoot(int direction)
+	{
+		Bullet bullet = bullets[bullets.size() - 1];
+		bullets.pop_back();
+
+		bullet.State = Fired;
+		bullet.Shoot(direction);
+	}
 };
 
 struct NPC : public Entity
@@ -74,8 +141,19 @@ struct NPC : public Entity
 		rect.x = rand() % 800;
 		rect.y = rand() % 600;
 	}
-	void Move(int x, int y)
+	void Move(SDL_Renderer* renderer, int x, int y)
 	{
+		// Move the NPC (PathFinding Algo):
+
+		// Draw the NPC:
+		Draw(renderer);
+
+		// Move bullet to NPCs new location:
+		for (int i = 0; i < 6; i++)
+		{
+			bullets[i].Move(rect.x, rect.y);
+			bullets[i].Draw(renderer);
+		}
 	}
 	void Draw(SDL_Renderer *renderer, int R, int G, int B)
 	{
@@ -87,12 +165,10 @@ struct NPC : public Entity
 		SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
 		SDL_RenderFillRect(renderer, &rect);
 	}
-};
+	void Shoot(int direction)
+	{
 
-struct EntityManager
-{
-	vector<Entity*> NPCs;
-
+	}
 };
 
 int main(int argc, char *argv[])
@@ -100,13 +176,14 @@ int main(int argc, char *argv[])
 	// Initializers:
 	SDL_Init(SDL_INIT_VIDEO);
 	srand(time(NULL));
-	EntityManager EntityManager;
+	vector<Entity*> NPCs;
 	Entity *player = new Player;
+	int direction = 0;
 	int npcLimit = rand() % 5 + 1;
 	for (int i = 0; i < npcLimit; i++)
 	{
 		Entity *npc = new NPC;
-		EntityManager.NPCs.push_back(npc);
+		NPCs.push_back(npc);
 	}
 
 
@@ -124,7 +201,21 @@ int main(int argc, char *argv[])
 	SDL_Event event;
 	while (running)
 	{
-		// Process events
+		// Clear the screen
+		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+		SDL_RenderClear(renderer);
+
+		// Draw The Player:
+		player->Draw(renderer);
+
+		// Draw The NPC:
+		for (int i = 0; i < npcLimit; i++)
+		{
+			NPCs[i]->Draw(renderer);
+		}
+
+
+		// Process events (I need to make this multithreaded)
 		while (SDL_PollEvent(&event))
 		{
 			if (event.type == SDL_QUIT)
@@ -136,35 +227,27 @@ int main(int argc, char *argv[])
 				switch (event.key.keysym.sym)
 				{
 				case SDLK_LEFT:			 // Left arrow key
-					player->Move(-5, 0); // Move player to the left
+					player->Move(renderer, -5, 0); // Move player to the left
+					direction = 3;
 					break;
 				case SDLK_RIGHT:		 // Right arrow key
-					player->Move(5, 0); // Move player to the right
+					player->Move(renderer, 5, 0); // Move player to the right
+					direction = 1;
 					break;
 				case SDLK_UP:			// Up arrow key
-					player->Move(0, -5); // Move player up
+					player->Move(renderer, 0, -5); // Move player up
+					direction = 0;
 					break;
 				case SDLK_DOWN:			// Down arrow key
-					player->Move(0, 5); // Move player down
+					player->Move(renderer, 0, 5); // Move player down
+					direction = 2;
+					break;
+				case SDLK_f:
+					player->Shoot(direction);
 					break;
 				}
 			}
-		}
-
-		// Clear the screen
-		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-		SDL_RenderClear(renderer);
-
-		// Draw the game world:
-
-		// Draw The Player:
-		player->Draw(renderer);
-
-		// Draw The NPC:
-		for (int i = 0; i < npcLimit; i++)
-		{
-			EntityManager.NPCs[i]->Draw(renderer);
-		}
+		}		
 
 		// Show the frame
 		SDL_RenderPresent(renderer);
