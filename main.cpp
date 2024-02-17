@@ -6,6 +6,21 @@
 
 using namespace std;
 
+/*
+
+Notes:
+- Make the Bullet struct independant of the Entity struct.
+
+*/
+
+enum Direction
+{
+	Up,
+	Right,
+	Down,
+	Left
+};
+
 enum BulletState
 {
 	Ready,
@@ -38,7 +53,7 @@ struct Bullet
 		Speed = 5;
 		State = Ready;
 	}
-	void SetPosition(SDL_Renderer *renderer, int x, int y)
+	void Move(int x, int y)
 	{
 		rect.x += x;
 		rect.y += y;
@@ -52,8 +67,17 @@ struct Bullet
 	{
 		switch (direction)
 		{
-		case 0:
-
+		case Up:
+			Move(0, -Speed);
+			break;
+		case Right:
+			Move(Speed, 0);
+			break;
+		case Down:
+			Move(0, Speed);
+			break;
+		case Left:
+			Move(-Speed, 0);
 			break;
 		default:
 			break;
@@ -89,7 +113,7 @@ struct Entity
 		}
 	}
 
-	virtual void Move(SDL_Renderer *renderer, int x, int y) = 0;
+	virtual void Move(int x, int y) = 0;
 	virtual void Draw(SDL_Renderer *renderer, int R, int G, int B) = 0;
 	virtual void Draw(SDL_Renderer *renderer) = 0;
 	virtual void Shoot(int direction) = 0;
@@ -102,7 +126,7 @@ struct Player : public Entity
 		rect.x = rand() % 800;
 		rect.y = rand() % 600;
 	}
-	void Move(SDL_Renderer *renderer, int x, int y)
+	void Move(int x, int y)
 	{
 		// Move the Player:
 		rect.x += x;
@@ -111,7 +135,7 @@ struct Player : public Entity
 		// Move bullet to players new location:
 		for (int i = 0; i < NUM_OF_BULLETs; i++)
 		{
-			bullets[i].SetPosition(renderer, rect.x, rect.y);
+			bullets[i].Move(rect.x, rect.y);
 		}
 	}
 	void Draw(SDL_Renderer *renderer, int R, int G, int B)
@@ -145,14 +169,14 @@ struct NPC : public Entity
 		rect.x = rand() % 800;
 		rect.y = rand() % 600;
 	}
-	void Move(SDL_Renderer *renderer, int x, int y)
+	void Move(int x, int y)
 	{
 		// Move the NPC (PathFinding Algo):
 
 		// Move bullet to NPCs new location:
 		for (int i = 0; i < NUM_OF_BULLETs; i++)
 		{
-			bullets[i].SetPosition(renderer, rect.x, rect.y);
+			bullets[i].Move(rect.x, rect.y);
 		}
 	}
 	void Draw(SDL_Renderer *renderer, int R, int G, int B)
@@ -183,22 +207,21 @@ private:
 public:
 	Engine()
 	{
+		SDL_Init(SDL_INIT_VIDEO);
+
 		player = new Player;
-		direction = 0;
+		direction = Up;
 		npcLimit = rand() % NUM_OF_NPCs + 1;
 		for (int i = 0; i < npcLimit; i++)
 		{
 			Entity *npc = new NPC;
 			NPCs.push_back(npc);
 		}
-		// Create a window
 		window = SDL_CreateWindow("2D Game Demo", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600, 0);
-		// Create a renderer
 		renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 	}
 	void GameLoop()
 	{
-		// Game loop
 		bool running = true;
 
 		while (running)
@@ -240,8 +263,9 @@ public:
 	bool Update()
 	{
 		bool running = true;
+		bool shot = false;
 		SDL_Event event;
-		// Process events (I need to make this multithreaded)
+		// Process events
 		while (SDL_PollEvent(&event))
 		{
 			if (event.type == SDL_QUIT)
@@ -252,20 +276,20 @@ public:
 			{
 				switch (event.key.keysym.sym)
 				{
-				case SDLK_LEFT:					   // Left arrow key
-					player->Move(renderer, -5, 0); // Move player to the left
+				case SDLK_LEFT:			 // Left arrow key
+					player->Move(-5, 0); // Move player to the left
 					direction = 3;
 					break;
-				case SDLK_RIGHT:				  // Right arrow key
-					player->Move(renderer, 5, 0); // Move player to the right
+				case SDLK_RIGHT:		// Right arrow key
+					player->Move(5, 0); // Move player to the right
 					direction = 1;
 					break;
-				case SDLK_UP:					   // Up arrow key
-					player->Move(renderer, 0, -5); // Move player up
+				case SDLK_UP:			 // Up arrow key
+					player->Move(0, -5); // Move player up
 					direction = 0;
 					break;
-				case SDLK_DOWN:					  // Down arrow key
-					player->Move(renderer, 0, 5); // Move player down
+				case SDLK_DOWN:			// Down arrow key
+					player->Move(0, 5); // Move player down
 					direction = 2;
 					break;
 				case SDLK_f:
@@ -276,12 +300,16 @@ public:
 		}
 		return running;
 	}
+	~Engine()
+	{
+		SDL_DestroyRenderer(renderer);
+		SDL_DestroyWindow(window);
+		SDL_Quit();
+	}
 };
 
 int main(int argc, char *argv[])
 {
-	// Initializers:
-	SDL_Init(SDL_INIT_VIDEO);
 	srand(time(NULL));
 
 	Engine engine;
