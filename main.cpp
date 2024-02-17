@@ -170,48 +170,77 @@ struct NPC : public Entity
 	}
 };
 
-int main(int argc, char *argv[])
+class Engine
 {
-	// Initializers:
-	SDL_Init(SDL_INIT_VIDEO);
-	srand(time(NULL));
+private:
 	vector<Entity *> NPCs;
-	Entity *player = new Player;
-	int direction = 0;
-	int npcLimit = rand() % NUM_OF_NPCs + 1;
-	for (int i = 0; i < npcLimit; i++)
+	Entity *player;
+	int direction;
+	int npcLimit;
+	SDL_Window *window;
+	SDL_Renderer *renderer;
+
+public:
+	Engine()
 	{
-		Entity *npc = new NPC;
-		NPCs.push_back(npc);
+		player = new Player;
+		direction = 0;
+		npcLimit = rand() % NUM_OF_NPCs + 1;
+		for (int i = 0; i < npcLimit; i++)
+		{
+			Entity *npc = new NPC;
+			NPCs.push_back(npc);
+		}
+		// Create a window
+		window = SDL_CreateWindow("2D Game Demo", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600, 0);
+		// Create a renderer
+		renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 	}
-
-	//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!//
-	// Create a window																									   //
-	SDL_Window *window = SDL_CreateWindow("2D Game Demo", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600, 0); //
-	// Create a renderer																								   //
-	SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC); //
-	//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!//
-
-	//////
-
-	// Game loop
-	bool running = true;
-	SDL_Event event;
-	while (running)
+	void GameLoop()
 	{
-		// Clear the screen
-		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-		SDL_RenderClear(renderer);
+		// Game loop
+		bool running = true;
 
-		// Draw The Player:
+		while (running)
+		{
+			// Clear the screen
+			SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+			SDL_RenderClear(renderer);
+
+			Draw();
+
+			running = Update();
+
+			SDL_RenderPresent(renderer);
+		}
+	}
+	void Draw()
+	{
+		// Draw the Player:
 		player->Draw(renderer);
-
-		// Draw The NPC:
+		// Draw the NPCs:
 		for (int i = 0; i < npcLimit; i++)
 		{
 			NPCs[i]->Draw(renderer);
 		}
-
+		// Draw the NPC Bullets:
+		for (int i = 0; i < npcLimit; i++)
+		{
+			for (int j = 0; j < NUM_OF_BULLETs; j++)
+			{
+				NPCs[i]->bullets[j].Draw(renderer);
+			}
+		}
+		// Draw the Player Bullets:
+		for (int i = 0; i < NUM_OF_BULLETs; i++)
+		{
+			player->bullets[i].Draw(renderer);
+		}
+	}
+	bool Update()
+	{
+		bool running = true;
+		SDL_Event event;
 		// Process events (I need to make this multithreaded)
 		while (SDL_PollEvent(&event))
 		{
@@ -245,28 +274,17 @@ int main(int argc, char *argv[])
 				}
 			}
 		}
-
-		// Draw Everything:
-
-		// Draw the Player:
-		player->Draw(renderer);
-		// Draw the NPCs:
-		for (int i = 0; i < npcLimit; i++)
-		{
-			NPCs[i]->Draw(renderer);
-		}
-		// Draw the Bullets:
-		for (int i = 0; i < npcLimit; i++)
-		{
-			for (int j = 0; i < NUM_OF_BULLETs; i++)
-			{
-				NPCs[i]->bullets[j].Draw(renderer);
-			}
-		}
-
-			// Show the frame
-			SDL_RenderPresent(renderer);
+		return running;
 	}
+};
 
+int main(int argc, char *argv[])
+{
+	// Initializers:
+	SDL_Init(SDL_INIT_VIDEO);
+	srand(time(NULL));
+
+	Engine engine;
+	engine.GameLoop();
 	return 0;
 }
