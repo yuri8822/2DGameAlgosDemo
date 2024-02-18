@@ -38,6 +38,7 @@ struct Bullet
 	int Speed;
 	int State;
 	bool isNPCs;
+	int direction;
 
 	Bullet()
 	{
@@ -67,26 +68,6 @@ struct Bullet
 	{
 		SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 		SDL_RenderFillRect(renderer, &rect);
-	}
-	void Shoot(int direction)
-	{
-		switch (direction)
-		{
-		case Up:
-			Move(0, -Speed);
-			break;
-		case Right:
-			Move(Speed, 0);
-			break;
-		case Down:
-			Move(0, Speed);
-			break;
-		case Left:
-			Move(-Speed, 0);
-			break;
-		default:
-			break;
-		}
 	}
 };
 
@@ -168,7 +149,7 @@ struct Player : public Entity
 			if (bullets[i].State == Ready)
 			{
 				bullets[i].State = Fired;
-				bullets[i].Shoot(direction);
+				bullets[i].direction = direction;
 				break;
 			}
 		}
@@ -221,7 +202,6 @@ private:
 	int npcLimit;
 	SDL_Window *window;
 	SDL_Renderer *renderer;
-	vector <Bullet> firedBullets;
 
 public:
 	Engine()
@@ -315,8 +295,6 @@ public:
 					break;
 				case SDLK_SPACE:
 					player->Shoot(direction);
-					player->bullets[0].State = Fired;
-					firedBullets.push_back(player->bullets[0]); //// this is where i left off
 					break;
 				default:
 					break;
@@ -377,7 +355,31 @@ public:
 		// Update the Player Bullets (also check for when a certain bullet is fired):
 		for (int i = 0; i < NUM_OF_BULLETs; i++)
 		{
-			player->bullets[i].SetPosition(player->rect.x, player->rect.y);
+			if (player->bullets[i].State == Fired)
+			{
+				switch (player->bullets[i].direction)
+				{
+				case Up:
+					player->bullets[i].Move(0, -player->bullets[i].Speed);
+					break;
+				case Right:
+					player->bullets[i].Move(player->bullets[i].Speed, 0);
+					break;
+				case Down:
+					player->bullets[i].Move(0, player->bullets[i].Speed);
+					break;
+				case Left:
+					player->bullets[i].Move(-player->bullets[i].Speed, 0);
+					break;
+				
+				default:
+					break;
+				}
+			}
+			else if (player->bullets[i].State == Ready)
+			{
+				player->bullets[i].SetPosition(player->rect.x, player->rect.y);
+			}
 		}
 	}
 	~Engine()
