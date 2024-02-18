@@ -10,6 +10,9 @@ using namespace std;
 
 Notes:
 - Make the Bullet struct independant of the Entity struct.
+- Add a collision system that registers every object in itself and any time an objects "Move" or "SetPosition" functions are called,
+  they Update that register.
+  this collision system will place its own checks for any collisions, at the end of every Update.
 
 */
 
