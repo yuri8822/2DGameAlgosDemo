@@ -58,6 +58,11 @@ struct Bullet
 		rect.x += x;
 		rect.y += y;
 	}
+	void SetPosition(int x, int y)
+	{
+		rect.x = x;
+		rect.y = y;
+	}
 	void Draw(SDL_Renderer *renderer)
 	{
 		SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
@@ -92,6 +97,7 @@ struct Entity
 	int DamageOut;
 	int DamageIn;
 	bool Slowed;
+	bool Moving;
 	vector<Bullet> bullets;
 
 	Entity()
@@ -105,6 +111,7 @@ struct Entity
 		DamageOut = 20;
 		DamageIn = 20;
 		Slowed = false;
+		Moving = false;
 
 		for (int i = 0; i < NUM_OF_BULLETs; i++)
 		{
@@ -114,6 +121,7 @@ struct Entity
 	}
 
 	virtual void Move(int x, int y) = 0;
+	virtual void SetPostion(int x, int y) = 0;
 	virtual void Draw(SDL_Renderer *renderer, int R, int G, int B) = 0;
 	virtual void Draw(SDL_Renderer *renderer) = 0;
 	virtual void Shoot(int direction) = 0;
@@ -137,6 +145,11 @@ struct Player : public Entity
 		{
 			bullets[i].Move(rect.x, rect.y);
 		}
+	}
+	void SetPostion(int x, int y)
+	{
+		rect.x = x;
+		rect.y = y;
 	}
 	void Draw(SDL_Renderer *renderer, int R, int G, int B)
 	{
@@ -179,6 +192,11 @@ struct NPC : public Entity
 			bullets[i].Move(rect.x, rect.y);
 		}
 	}
+	void SetPostion(int x, int y)
+	{
+		rect.x = x;
+		rect.y = y;
+	}
 	void Draw(SDL_Renderer *renderer, int R, int G, int B)
 	{
 		SDL_SetRenderDrawColor(renderer, R, G, B, 255);
@@ -203,6 +221,7 @@ private:
 	int npcLimit;
 	SDL_Window *window;
 	SDL_Renderer *renderer;
+	vector <Bullet> firedBullets;
 
 public:
 	Engine()
@@ -223,7 +242,6 @@ public:
 	void GameLoop()
 	{
 		bool running = true;
-
 		while (running)
 		{
 			// Clear the screen
@@ -232,7 +250,9 @@ public:
 
 			Draw();
 
-			running = Update();
+			running = EventListener();
+
+			Update();
 
 			SDL_RenderPresent(renderer);
 		}
@@ -260,45 +280,105 @@ public:
 			player->bullets[i].Draw(renderer);
 		}
 	}
-	bool Update()
+	bool EventListener()
 	{
 		bool running = true;
-		bool shot = false;
 		SDL_Event event;
-		// Process events
 		while (SDL_PollEvent(&event))
 		{
 			if (event.type == SDL_QUIT)
 			{
 				running = false;
 			}
-			else if (event.type == SDL_KEYDOWN)
+			if (event.type == SDL_KEYDOWN)
 			{
 				switch (event.key.keysym.sym)
 				{
-				case SDLK_LEFT:			 // Left arrow key
-					player->Move(-5, 0); // Move player to the left
-					direction = 3;
+				case SDLK_ESCAPE:
+					return false;
 					break;
-				case SDLK_RIGHT:		// Right arrow key
-					player->Move(5, 0); // Move player to the right
-					direction = 1;
+				case SDLK_UP:
+					direction = Up;
+					player->Moving = true;
 					break;
-				case SDLK_UP:			 // Up arrow key
-					player->Move(0, -5); // Move player up
-					direction = 0;
+				case SDLK_RIGHT:
+					direction = Right;
+					player->Moving = true;
 					break;
-				case SDLK_DOWN:			// Down arrow key
-					player->Move(0, 5); // Move player down
-					direction = 2;
+				case SDLK_DOWN:
+					direction = Down;
+					player->Moving = true;
 					break;
-				case SDLK_f:
+				case SDLK_LEFT:
+					direction = Left;
+					player->Moving = true;
+					break;
+				case SDLK_SPACE:
 					player->Shoot(direction);
+					player->bullets[0].State = Fired;
+					firedBullets.push_back(player->bullets[0]); //// this is where i left off
+					break;
+				default:
 					break;
 				}
 			}
 		}
 		return running;
+	}
+	void Update()
+	{
+		// Update the Player:
+		switch (direction)
+		{
+		case Up:
+			if (player->Moving)
+			{
+				player->Move(0, -5);
+				player->Moving = false;
+			}
+			break;
+		case Right:
+			if (player->Moving)
+			{
+				player->Move(5, 0);
+				player->Moving = false;
+			}
+			break;
+		case Down:
+			if (player->Moving)
+			{
+				player->Move(0, 5);
+				player->Moving = false;
+			}
+			break;
+		case Left:
+			if (player->Moving)
+			{
+				player->Move(-5, 0);
+				player->Moving = false;
+			}
+			break;
+		default:
+			break;
+		}
+		// Update the NPCs:
+		for (int i = 0; i < npcLimit; i++)
+		{
+			NPCs[i]->Move(0, 0);
+		}
+		// Update the NPC Bullets:
+		for (int i = 0; i < npcLimit; i++)
+		{
+			for (int j = 0; j < NUM_OF_BULLETs; j++)
+			{
+				NPCs[i]->bullets[j].SetPosition(NPCs[i]->rect.x, NPCs[i]->rect.y);
+			}
+		}
+		// Update the Player Bullets (also check for when a certain bullet is fired):
+		for (int i = 0; i < NUM_OF_BULLETs; i++)
+		{
+			player->bullets[i].SetPosition(player->rect.x, player->rect.y);
+		}
 	}
 	~Engine()
 	{
