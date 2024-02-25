@@ -12,7 +12,7 @@ Notes:
 - Add a collision system that registers every object in itself and any time an objects "Move" or "SetPosition" functions are called,
   they Update that register.
   this collision system will place its own checks for any collisions, at the end of every Update.
-- Implement a Graph structure that keeps a record of all the objects locations, in order to implement path finding algorithms down 
+- Implement a Graph structure that keeps a record of all the objects locations, in order to implement path finding algorithms down
   the line... In Sha Allah.
 
 */
@@ -43,6 +43,7 @@ struct Bullet
 	int State;
 	bool isNPCs;
 	int direction;
+	int lifespan;
 
 	Bullet()
 	{
@@ -57,14 +58,40 @@ struct Bullet
 		Damage = 10;
 		Speed = 5;
 		State = Ready;
+		lifespan = 200;
 	}
-	void Move(int x, int y)
+	void Move(int direction)
 	{
-		rect.x += x;
-		rect.y += y;
+		switch (direction)
+		{
+		case Up:
+			rect.x += 0;
+			rect.y -= Speed;
+			lifespan--;
+			break;
+		case Right:
+			rect.x += Speed;
+			rect.y += 0;
+			lifespan--;
+			break;
+		case Down:
+			rect.x += 0;
+			rect.y += Speed;
+			lifespan--;
+			break;
+		case Left:
+			rect.x -= Speed;
+			rect.y += 0;
+			lifespan--;
+			break;
+		default:
+			break;
+		}
 	}
-	void SetPosition(int x, int y)
+	void Reset(int x, int y)
 	{
+		State = Ready;
+		lifespan = 200;
 		rect.x = x;
 		rect.y = y;
 	}
@@ -162,7 +189,7 @@ struct NPC : public Entity
 	}
 	void Move(int x, int y)
 	{
-		// Move the NPC (PathFinding Algo):		
+		// Move the NPC (PathFinding Algo):
 	}
 	void SetPostion(int x, int y)
 	{
@@ -340,7 +367,7 @@ public:
 		{
 			for (int j = 0; j < NUM_OF_BULLETs; j++)
 			{
-				NPCs[i]->bullets[j].SetPosition(NPCs[i]->rect.x, NPCs[i]->rect.y);
+				NPCs[i]->bullets[j].Reset(NPCs[i]->rect.x, NPCs[i]->rect.y);
 			}
 		}
 		// Update the Player Bullets (also check for when a certain bullet is fired):
@@ -348,28 +375,18 @@ public:
 		{
 			if (player->bullets[i].State == Fired)
 			{
-				switch (player->bullets[i].direction)
+				if (player->bullets[i].lifespan > 0)
 				{
-				case Up:
-					player->bullets[i].Move(0, -player->bullets[i].Speed);
-					break;
-				case Right:
-					player->bullets[i].Move(player->bullets[i].Speed, 0);
-					break;
-				case Down:
-					player->bullets[i].Move(0, player->bullets[i].Speed);
-					break;
-				case Left:
-					player->bullets[i].Move(-player->bullets[i].Speed, 0);
-					break;
-				
-				default:
-					break;
+					player->bullets[i].Move(player->bullets[i].direction);
+				}
+				else
+				{
+					player->bullets[i].Reset(player->rect.x, player->rect.y);
 				}
 			}
 			else if (player->bullets[i].State == Ready)
 			{
-				player->bullets[i].SetPosition(player->rect.x, player->rect.y);
+				player->bullets[i].Reset(player->rect.x, player->rect.y);
 			}
 		}
 	}
