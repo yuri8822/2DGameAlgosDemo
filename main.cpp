@@ -9,7 +9,6 @@ using namespace std;
 /*
 
 Notes:
-- Make the Bullet struct independant of the Entity struct.
 - Add a collision system that registers every object in itself and any time an objects "Move" or "SetPosition" functions are called,
   they Update that register.
   this collision system will place its own checks for any collisions, at the end of every Update.
@@ -33,8 +32,8 @@ enum BulletState
 	Hit
 };
 
-#define NUM_OF_NPCs 10
-#define NUM_OF_BULLETs 10
+#define NUM_OF_NPCs 5
+#define NUM_OF_BULLETs 3
 
 struct Bullet
 {
@@ -122,15 +121,8 @@ struct Player : public Entity
 	}
 	void Move(int x, int y)
 	{
-		// Move the Player:
 		rect.x += x;
 		rect.y += y;
-
-		// Move bullet to players new location:
-		for (int i = 0; i < NUM_OF_BULLETs; i++)
-		{
-			bullets[i].Move(rect.x, rect.y);
-		}
 	}
 	void SetPostion(int x, int y)
 	{
@@ -170,13 +162,7 @@ struct NPC : public Entity
 	}
 	void Move(int x, int y)
 	{
-		// Move the NPC (PathFinding Algo):
-
-		// Move bullet to NPCs new location:
-		for (int i = 0; i < NUM_OF_BULLETs; i++)
-		{
-			bullets[i].Move(rect.x, rect.y);
-		}
+		// Move the NPC (PathFinding Algo):		
 	}
 	void SetPostion(int x, int y)
 	{
