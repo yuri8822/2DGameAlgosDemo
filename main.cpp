@@ -106,6 +106,8 @@ struct Entity
 {
 	SDL_Rect rect;
 	int Health;
+	int Speed;
+	int Direction;
 	int DamageOut;
 	int DamageIn;
 	bool Slowed;
@@ -120,6 +122,8 @@ struct Entity
 		rect.y = 200;
 
 		Health = 100;
+		Speed = 5;
+		Direction = Right;
 		DamageOut = 20;
 		DamageIn = 20;
 		Slowed = false;
@@ -132,11 +136,11 @@ struct Entity
 		}
 	}
 
-	virtual void Move(int x, int y) = 0;
+	virtual void Move() = 0;
 	virtual void SetPostion(int x, int y) = 0;
 	virtual void Draw(SDL_Renderer *renderer, int R, int G, int B) = 0;
 	virtual void Draw(SDL_Renderer *renderer) = 0;
-	virtual void Shoot(int direction) = 0;
+	virtual void Shoot() = 0;
 };
 
 struct Player : public Entity
@@ -145,11 +149,35 @@ struct Player : public Entity
 	{
 		rect.x = rand() % 800;
 		rect.y = rand() % 600;
+
+		for (int i = 0; i < NUM_OF_BULLETs; i++)
+		{
+			bullets[i].isNPCs = false;
+		}
 	}
-	void Move(int x, int y)
+	void Move()
 	{
-		rect.x += x;
-		rect.y += y;
+		switch (Direction)
+		{
+		case Up:
+			rect.x += 0;
+			rect.y -= Speed;
+			break;
+		case Right:
+			rect.x += Speed;
+			rect.y += 0;
+			break;
+		case Down:
+			rect.x += 0;
+			rect.y += Speed;
+			break;
+		case Left:
+			rect.x -= Speed;
+			rect.y += 0;
+			break;
+		default:
+			break;
+		}
 	}
 	void SetPostion(int x, int y)
 	{
@@ -166,14 +194,14 @@ struct Player : public Entity
 		SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
 		SDL_RenderFillRect(renderer, &rect);
 	}
-	void Shoot(int direction)
+	void Shoot()
 	{
 		for (int i = 0; i < NUM_OF_BULLETs; i++)
 		{
 			if (bullets[i].State == Ready)
 			{
 				bullets[i].State = Fired;
-				bullets[i].direction = direction;
+				bullets[i].direction = Direction;
 				break;
 			}
 		}
@@ -187,7 +215,7 @@ struct NPC : public Entity
 		rect.x = rand() % 800;
 		rect.y = rand() % 600;
 	}
-	void Move(int x, int y)
+	void Move()
 	{
 		// Move the NPC (PathFinding Algo):
 	}
@@ -206,7 +234,7 @@ struct NPC : public Entity
 		SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
 		SDL_RenderFillRect(renderer, &rect);
 	}
-	void Shoot(int direction)
+	void Shoot()
 	{
 	}
 };
@@ -216,7 +244,6 @@ class Engine
 private:
 	vector<Entity *> NPCs;
 	Entity *player;
-	int direction;
 	int npcLimit;
 	SDL_Window *window;
 	SDL_Renderer *renderer;
@@ -227,7 +254,6 @@ public:
 		SDL_Init(SDL_INIT_VIDEO);
 
 		player = new Player;
-		direction = Up;
 		npcLimit = rand() % NUM_OF_NPCs + 1;
 		for (int i = 0; i < npcLimit; i++)
 		{
@@ -296,23 +322,23 @@ public:
 					return false;
 					break;
 				case SDLK_UP:
-					direction = Up;
+					player->Direction = Up;
 					player->Moving = true;
 					break;
 				case SDLK_RIGHT:
-					direction = Right;
+					player->Direction = Right;
 					player->Moving = true;
 					break;
 				case SDLK_DOWN:
-					direction = Down;
+					player->Direction = Down;
 					player->Moving = true;
 					break;
 				case SDLK_LEFT:
-					direction = Left;
+					player->Direction = Left;
 					player->Moving = true;
 					break;
 				case SDLK_SPACE:
-					player->Shoot(direction);
+					player->Shoot();
 					break;
 				default:
 					break;
@@ -324,43 +350,16 @@ public:
 	void Update()
 	{
 		// Update the Player:
-		switch (direction)
+		if (player->Moving)
 		{
-		case Up:
-			if (player->Moving)
-			{
-				player->Move(0, -5);
-				player->Moving = false;
-			}
-			break;
-		case Right:
-			if (player->Moving)
-			{
-				player->Move(5, 0);
-				player->Moving = false;
-			}
-			break;
-		case Down:
-			if (player->Moving)
-			{
-				player->Move(0, 5);
-				player->Moving = false;
-			}
-			break;
-		case Left:
-			if (player->Moving)
-			{
-				player->Move(-5, 0);
-				player->Moving = false;
-			}
-			break;
-		default:
-			break;
+			player->Move();
+			player->Moving = false;
 		}
+
 		// Update the NPCs:
 		for (int i = 0; i < npcLimit; i++)
 		{
-			NPCs[i]->Move(0, 0);
+			NPCs[i]->Move();
 		}
 		// Update the NPC Bullets:
 		for (int i = 0; i < npcLimit; i++)
