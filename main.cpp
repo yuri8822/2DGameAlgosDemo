@@ -32,8 +32,9 @@ enum BulletState
 	Hit
 };
 
+#define BULLET_LIFE_SPAN 100
 #define NUM_OF_NPCs 5
-#define NUM_OF_BULLETs 3
+#define NUM_OF_BULLETs 4
 
 struct Bullet
 {
@@ -58,7 +59,7 @@ struct Bullet
 		Damage = 10;
 		Speed = 5;
 		State = Ready;
-		lifespan = 200;
+		lifespan = BULLET_LIFE_SPAN;
 	}
 	void Move(int direction)
 	{
@@ -91,7 +92,7 @@ struct Bullet
 	void Reset(int x, int y)
 	{
 		State = Ready;
-		lifespan = 200;
+		lifespan = BULLET_LIFE_SPAN;
 		rect.x = x;
 		rect.y = y;
 	}
