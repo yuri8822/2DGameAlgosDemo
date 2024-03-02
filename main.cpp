@@ -6,6 +6,7 @@
 
 #include "Entity.h"
 #include "Bullet.h"
+#include "CollisionSystem.h"
 
 using namespace std;
 
@@ -59,6 +60,8 @@ public:
 			Draw();
 
 			running = EventListener();
+
+			CheckCollision();
 
 			Update();
 
@@ -131,6 +134,59 @@ public:
 		}
 		return running;
 	}
+	bool CheckCollision()
+    {
+		// push all objects (player, NPCs, and their bullets) into a vector:
+		vector<Entity *> objects;
+		objects.push_back(player);
+		for (int i = 0; i < npcLimit; i++)
+		{
+			objects.push_back(NPCs[i]);
+		}
+		for (int i = 0; i < npcLimit; i++)
+		{
+			for (int j = 0; j < NUM_OF_BULLETs; j++)
+			{
+				objects.push_back(&NPCs[i]->bullets[j]);	// Make all objects into a uniform structure
+			}
+		}
+		for (int i = 0; i < NUM_OF_BULLETs; i++)
+		{
+			objects.push_back(&player->bullets[i]);
+		}
+
+		// check for collisions:
+
+        for (int i = 0; i < objects.size(); i++)
+        {
+            for (int j = 0; j < objects.size(); j++)
+            {
+                if (i != j)
+                {
+                    if (objects[i]->rect.x < objects[j]->rect.x + objects[j]->rect.w &&
+						objects[i]->rect.x + objects[i]->rect.w > objects[j]->rect.x &&
+						objects[i]->rect.y < objects[j]->rect.y + objects[j]->rect.h &&
+						objects[i]->rect.y + objects[i]->rect.h > objects[j]->rect.y)
+					{
+						objects[i]->Health -= objects[j]->DamageOut;
+						objects[j]->Health -= objects[i]->DamageOut;
+
+						if (objects[i]->Health <= 0)
+						{
+							objects.erase(objects.begin() + i);
+						}
+						if (objects[j]->Health <= 0)
+						{
+							objects.erase(objects.begin() + j);
+						}
+
+						return true;
+
+					}
+                }
+            }
+        }
+    }
 	void Update()
 	{
 		// Update the Player:
