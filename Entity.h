@@ -3,12 +3,14 @@
 #include <vector>
 #include <SDL2/SDL.h>
 #include "Bullet.h"
+#include "CollisionSystem.h"
 
 #define NUM_OF_BULLETs 4
 
 struct Entity
 {
     SDL_Rect rect;
+    Frame frame;
     int Health;
     int Speed;
     int Direction;
@@ -24,6 +26,7 @@ struct Entity
     virtual void Draw(SDL_Renderer *renderer, int R, int G, int B) = 0;
     virtual void Draw(SDL_Renderer *renderer) = 0;
     virtual void Shoot() = 0;
+    virtual void updateFrame();
 };
 
 struct Player : public Entity

@@ -7,6 +7,8 @@ Entity::Entity()
     rect.x = 200;
     rect.y = 200;
 
+    updateFrame();
+
     Health = 100;
     Speed = 5;
     Direction = Right;
@@ -21,11 +23,20 @@ Entity::Entity()
         bullets.push_back(newBullet);
     }
 }
+void Entity::updateFrame()
+{
+    frame.coOrdinates[0] = {rect.x, rect.y};
+    frame.coOrdinates[1] = {rect.x + rect.w, rect.y};
+    frame.coOrdinates[2] = {rect.x, rect.y + rect.h};
+    frame.coOrdinates[3] = {rect.x + rect.w, rect.y + rect.h};
+}
 
 Player::Player()
 {
     rect.x = rand() % 800;
     rect.y = rand() % 600;
+
+    updateFrame();
 
     for (int i = 0; i < NUM_OF_BULLETs; i++)
     {
@@ -55,11 +66,13 @@ void Player::Move()
     default:
         break;
     }
+    updateFrame();
 }
 void Player::SetPostion(int x, int y)
 {
     rect.x = x;
     rect.y = y;
+    updateFrame();
 }
 void Player::Draw(SDL_Renderer *renderer, int R, int G, int B)
 {
@@ -88,15 +101,25 @@ NPC::NPC()
 {
     rect.x = rand() % 800;
     rect.y = rand() % 600;
+
+    updateFrame();
+
+    for (int i = 0; i < NUM_OF_BULLETs; i++)
+    {
+        bullets[i].isNPCs = true;
+    }
 }
 void NPC::Move()
 {
     // Move the NPC (PathFinding Algo):
+
+    updateFrame();
 }
 void NPC::SetPostion(int x, int y)
 {
     rect.x = x;
     rect.y = y;
+    updateFrame();
 }
 void NPC::Draw(SDL_Renderer *renderer, int R, int G, int B)
 {
