@@ -1,6 +1,7 @@
 #pragma once
 
 #include <SDL2/SDL.h>
+#include "CollisionSystem.h"
 
 enum Direction
 {
@@ -22,6 +23,7 @@ enum BulletState
 struct Bullet
 {
     SDL_Rect rect;
+    Frame frame;
     int Damage;
     int Speed;
     int State;
@@ -34,4 +36,5 @@ struct Bullet
     void Move(int direction);
     void Reset(int x, int y);
     void Draw(SDL_Renderer *renderer);
+    void updateFrame();
 };

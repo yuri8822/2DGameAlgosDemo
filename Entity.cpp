@@ -9,11 +9,11 @@ Entity::Entity()
 
     updateFrame();
 
-    Health = 100;
+    Health = 500;
     Speed = 5;
     Direction = Right;
-    DamageOut = 20;
-    DamageIn = 20;
+    DamageOut = 1;
+    DamageIn = 1;
     Slowed = false;
     Moving = false;
 

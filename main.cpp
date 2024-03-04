@@ -73,12 +73,12 @@ public:
 		// Draw the Player:
 		player->Draw(renderer);
 		// Draw the NPCs:
-		for (int i = 0; i < npcLimit; i++)
+		for (int i = 0; i < NPCs.size(); i++)
 		{
 			NPCs[i]->Draw(renderer);
 		}
 		// Draw the NPC Bullets:
-		for (int i = 0; i < npcLimit; i++)
+		for (int i = 0; i < NPCs.size(); i++)
 		{
 			for (int j = 0; j < NUM_OF_BULLETs; j++)
 			{
@@ -134,40 +134,23 @@ public:
 		}
 		return running;
 	}
-	bool CheckCollision()
-    {
+	void CheckCollision()
+	{
 		// check for collisions:
 
-        // for (int i = 0; i < objects.size(); i++)
-        // {
-        //     for (int j = 0; j < objects.size(); j++)
-        //     {
-        //         if (i != j)
-        //         {
-        //             if (objects[i]->rect.x < objects[j]->rect.x + objects[j]->rect.w &&
-		// 				objects[i]->rect.x + objects[i]->rect.w > objects[j]->rect.x &&
-		// 				objects[i]->rect.y < objects[j]->rect.y + objects[j]->rect.h &&
-		// 				objects[i]->rect.y + objects[i]->rect.h > objects[j]->rect.y)
-		// 			{
-		// 				objects[i]->Health -= objects[j]->DamageOut;
-		// 				objects[j]->Health -= objects[i]->DamageOut;
-
-		// 				if (objects[i]->Health <= 0)
-		// 				{
-		// 					objects.erase(objects.begin() + i);
-		// 				}
-		// 				if (objects[j]->Health <= 0)
-		// 				{
-		// 					objects.erase(objects.begin() + j);
-		// 				}
-
-		// 				return true;
-
-		// 			}
-        //         }
-        //     }
-        // }
-    }
+		// Check for Player Bullets hitting the NPCs:
+		for (int i = 0; i < NUM_OF_BULLETs; i++)
+		{
+			for (int j = 0; j < NPCs.size(); j++)
+			{
+				if (player->bullets[i].frame == NPCs[j]->frame)
+				{
+					NPCs[j]->Health -= player->bullets[i].Damage * player->DamageOut;
+					player->bullets[i].Reset(player->rect.x, player->rect.y);
+				}
+			}
+		}
+	}
 	void Update()
 	{
 		// Update the Player:
@@ -178,12 +161,19 @@ public:
 		}
 
 		// Update the NPCs:
-		for (int i = 0; i < npcLimit; i++)
+		for (int i = 0; i < NPCs.size(); i++)
+		{
+			if (NPCs[i]->Health <= 0)
+			{
+				NPCs.erase(NPCs.begin() + i);
+			}
+		}
+		for (int i = 0; i < NPCs.size(); i++)
 		{
 			NPCs[i]->Move();
 		}
 		// Update the NPC Bullets:
-		for (int i = 0; i < npcLimit; i++)
+		for (int i = 0; i < NPCs.size(); i++)
 		{
 			for (int j = 0; j < NUM_OF_BULLETs; j++)
 			{
