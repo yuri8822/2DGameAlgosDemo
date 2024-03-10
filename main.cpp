@@ -10,17 +10,6 @@
 
 using namespace std;
 
-/*
-
-Notes:
-- Add a collision system that registers every object in itself and any time an objects "Move" or "SetPosition" functions are called,
-  they Update that register.
-  this collision system will place its own checks for any collisions, at the end of every Update.
-- Implement a Graph structure that keeps a record of all the objects locations, in order to implement path finding algorithms down
-  the line... In Sha Allah.
-
-*/
-
 #define NUM_OF_NPCs 5
 #define NUM_OF_BULLETs 4
 
