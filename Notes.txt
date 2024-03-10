@@ -1,7 +1,4 @@
 Notes:
 - Add a State Manager that keeps track of the state of the game, and the state of the entities in the game.
-- Add a collision system that registers every object in itself and any time an objects "Move" or "SetPosition" functions are called,
-  they Update that register.
-  this collision system will place its own checks for any collisions, at the end of every Update.
 - Implement a Graph structure that keeps a record of all the objects locations, in order to implement path finding algorithms down
   the line... In Sha Allah.

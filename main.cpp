@@ -50,7 +50,7 @@ public:
 
 			running = EventListener();
 
-			CheckCollision();
+			CheckCollisions();
 
 			Update();
 
@@ -123,7 +123,7 @@ public:
 		}
 		return running;
 	}
-	void CheckCollision()
+	void CheckCollisions()
 	{
 		// check for collisions:
 
